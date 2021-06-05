@@ -1,0 +1,2 @@
+rootProject.name = "GetRssiDemo"
+include ':app'

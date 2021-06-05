@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">GetRssiDemo</string>
+
+    <string name="re_scan_devices">扫描附近蓝牙</string>
+    <string name="get_rssi">获取RSSI值</string>
+    <string name="remote_device_name">remote device name</string>
+</resources>
