@@ -80,25 +80,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private ExecutorService executor = Executors.newSingleThreadExecutor();
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+//    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void getCurrentDeviceRssi(BlDevice device) {
-        BluetoothDevice currentDevice = BA.getRemoteDevice(device.mac);
-        if (currentDevice == null) return;
-        BluetoothGatt gatt = currentDevice.connectGatt(this, true, new BluetoothGattCallback() {
-            @Override
-            public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-                super.onConnectionStateChange(gatt, status, newState);
-            }
-            @Override
-            public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
-                if (status == BluetoothGatt.GATT_SUCCESS) {
-                    textview.setText(Integer.toString(rssi));
-                }
-            }
-        });
-        gatt.readRemoteRssi();
+//        BluetoothDevice currentDevice = BA.getRemoteDevice(device.mac);
+//        if (currentDevice == null) return;
+//        BluetoothGatt gatt = currentDevice.connectGatt(this, true, new BluetoothGattCallback() {
+//            @Override
+//            public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+//                super.onConnectionStateChange(gatt, status, newState);
+//            }
+//            @Override
+//            public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
+//                if (status == BluetoothGatt.GATT_SUCCESS) {
+//                    textview.setText(Integer.toString(rssi));
+//                }
+//            }
+//        });
+//        gatt.readRemoteRssi();
     }
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+//    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public void getRssiExecutor(BlDevice device) {
         if (resultview.isScanning) {
             alert();
@@ -148,8 +148,9 @@ public class MainActivity extends AppCompatActivity {
                 String action = intent.getAction();
                 if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                     BluetoothDevice bt = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                    ParcelUuid[] uuids = bt.getUuids();
-                    lstBlDevice.add(new BlDevice(uuids[0].toString(), bt.getName(), bt.getAddress()));
+                    //ParcelUuid[] uuids = bt.getUuids();
+                    //lstBlDevice.add(new BlDevice(uuids[0].toString(), bt.getName(), bt.getAddress()));
+                    lstBlDevice.add(new BlDevice("", bt.getName(), bt.getAddress()));
                     bladapter.notifyDataSetChanged();//refresh listview
                 }
             }
