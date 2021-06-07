@@ -7,44 +7,55 @@
     android:layout_height="match_parent"
     android:paddingTop="?attr/actionBarSize">
 
-    <Button
-        android:id="@+id/btn_re_scan"
-        android:layout_width="162dp"
-        android:layout_height="57dp"
-        android:layout_marginStart="30dp"
-        android:layout_marginEnd="245dp"
-        android:layout_marginBottom="295dp"
-        android:clickable="true"
-        android:onClick="listScannedDevices"
-        android:text="@string/re_scan_devices"
-        app:icon="@android:drawable/ic_menu_search"
-        app:layout_constraintBottom_toBottomOf="@+id/text_current"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="409dp"
+        android:layout_height="54dp"
+        android:layout_marginBottom="680dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.05"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <Button
-        android:id="@+id/button"
-        android:layout_width="102dp"
-        android:layout_height="44dp"
-        android:layout_marginEnd="91dp"
-        android:layout_marginBottom="301dp"
-        android:clickable="true"
-        android:onClick="on"
-        android:text="Turn On"
-        app:layout_constraintBottom_toBottomOf="@+id/text_current"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" />
+        <Button
+            android:id="@+id/btn_re_scan"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:onClick="listScannedDevices"
+            android:text="@string/re_scan_devices"
+            app:icon="@android:drawable/ic_menu_search"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.05"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0"
+            tools:layout_conversion_absoluteHeight="57dp"
+            tools:layout_conversion_absoluteWidth="203dp"
+            tools:layout_editor_absoluteX="1dp"
+            tools:layout_editor_absoluteY="27dp" />
+
+        <Button
+            android:id="@+id/button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:onClick="on"
+            android:text="Turn On"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.902"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0"
+            tools:layout_conversion_absoluteHeight="44dp"
+            tools:layout_conversion_absoluteWidth="102dp" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ListView
         android:id="@+id/lv_device"
         android:layout_width="409dp"
-        android:layout_height="249dp"
+        android:layout_height="266dp"
         android:scrollbarStyle="outsideInset"
         android:scrollbars="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -52,7 +63,7 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.159"></ListView>
+        app:layout_constraintVertical_bias="0.073"></ListView>
 
     <com.liaou.getrssidemo.ResultView
         android:id="@+id/result_view"
@@ -62,14 +73,13 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="1dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:id="@+id/text_current"
         android:layout_width="388dp"
-        android:layout_height="28dp"
+        android:layout_height="56dp"
         android:layout_marginStart="4dp"
         android:layout_marginEnd="4dp"
         app:layout_constraintBottom_toTopOf="@+id/result_view"
