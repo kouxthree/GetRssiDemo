@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.ParcelUuid;
@@ -30,9 +31,11 @@ import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
     private BluetoothAdapter BA;
@@ -74,14 +77,19 @@ public class MainActivity extends AppCompatActivity {
                 == PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(getApplicationContext(), "Location Permission Already Granted", Toast.LENGTH_LONG).show();
         } else {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        REQUEST_CODE);
+//            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_CODE);
 //                Toast.makeText(getApplicationContext(), "Location Permission Granted", Toast.LENGTH_LONG).show();
-            } else {
-                Toast.makeText(getApplicationContext(), "Location Permission Is Necessary For This App", Toast.LENGTH_LONG).show();
-            }
+//            } else {
+            //Toast.makeText(getApplicationContext(), "Location Permission Is Necessary For This App", Toast.LENGTH_LONG).show();
+//                alert("Location Permission Is Necessary For This App");
+//                Intent intent = new Intent();
+//                intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+//                intent.setData(Uri.fromParts("package", getApplicationContext().getPackageName(), null));
+//                getApplicationContext().startActivity(intent);
+//            }
         }
     }
     @Override
@@ -94,7 +102,8 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(this, "Permission Granted", Toast.LENGTH_SHORT).show();
                     }
                 } else {
-                    Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show();
+                    alert("Location Permission Is Necessary For This App");
                 }
                 return;
             }
@@ -109,9 +118,10 @@ public class MainActivity extends AppCompatActivity {
 //        Intent getVisible = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
 //        startActivityForResult(getVisible, 0);
 //    }
-    private void alert() {
+    private void alert(String msg) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("等一哈")
+        String showmsg = (msg == null || msg.isEmpty()) ? "等一哈" : msg;
+        builder.setMessage(showmsg)
                 .setCancelable(false)
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
@@ -124,12 +134,19 @@ public class MainActivity extends AppCompatActivity {
 
     private ExecutorService executorTimer = Executors.newSingleThreadExecutor();
     private ExecutorService executorGetRssi = Executors.newFixedThreadPool(2);//thread pools
+//    Future<BlDevice>  blfuture;
 //    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void getCurrentDeviceRssi(BlDevice device) {
-        for (int i = 0; i < 4; i++) {
-            executorGetRssi.submit(new BlRssiCls(device));
+        //for (int i = 0; i < 4; i++) {
+        Future<BlDevice> blfuture = executorGetRssi.submit(new BlRssiCls(device));
+        try {
+            BlDevice deviceWithRssi = blfuture.get();
+            blfuture.cancel(true);
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
         }
+//        }
 //        GATT is only for BLE
 //        BluetoothGatt gatt = currentDevice.connectGatt(this, true, new BluetoothGattCallback() {
 //            @Override
@@ -149,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void runGetRssi(BlDevice device) {
         if (resultview.isScanning) {
-            alert();
+            alert(null);
             return;
         }
         resultview.isScanning = true;
@@ -157,8 +174,6 @@ public class MainActivity extends AppCompatActivity {
         resultview.currentDevice = device;
         textview.setText("");
         executorTimer.submit(() -> {
-//            device.getRssi();
-            getCurrentDeviceRssi(device);
             for (int i = resultview.countDown; i >= 0; i--) {
                 resultview.invalidate();
                 try {
@@ -169,14 +184,23 @@ public class MainActivity extends AppCompatActivity {
                 resultview.countDown--;
             }
             resultview.isScanning = false;
-            executorGetRssi.shutdownNow();//shutdown all scanning thread
+            //shutdown getrssi thread
+            executorGetRssi.shutdown();
+            try {
+                if (!executorGetRssi.awaitTermination(800, TimeUnit.MILLISECONDS)) {
+                    executorGetRssi.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executorGetRssi.shutdownNow();
+            }
 //            textview.setText(Integer.toString(getCurrentDeviceRssi(device)));
         });
+        getCurrentDeviceRssi(device);
     }
 
     public void listScannedDevices(View v) {
         if (BA.isDiscovering()) {
-            alert();
+            alert(null);
             return;
         }
         ArrayList<BlDevice> lstBlDevice = new ArrayList<BlDevice>();
