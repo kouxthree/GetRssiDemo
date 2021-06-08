@@ -184,7 +184,6 @@ public class MainActivity extends AppCompatActivity {
         BlDeviceListAdapter bladapter = new BlDeviceListAdapter(this, lstBlDevice);
         lv.setAdapter(bladapter);
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 runGetRssi(lstBlDevice.get(i));
