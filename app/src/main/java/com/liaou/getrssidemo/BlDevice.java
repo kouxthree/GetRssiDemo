@@ -10,12 +10,12 @@ public class BlDevice {
     public String uuid;
     public String name;
     public String mac;
-    public List<Double> lstRssi;
+    public List<Short> lstRssi;
     public BlDevice(String uuid, String name, String mac) {
         this.uuid = uuid;
         this.name = name;
         this.mac = mac;
-        lstRssi = new ArrayList<>();
+        lstRssi = new ArrayList<Short>();
     }
     public void getRssi() {
 //        for(int i= 0;i<100;i++) {

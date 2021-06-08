@@ -122,11 +122,44 @@ public class MainActivity extends AppCompatActivity {
         alert.show();
     }
 
-    private ExecutorService executor = Executors.newSingleThreadExecutor();
+    private ExecutorService executorTimer = Executors.newSingleThreadExecutor();
+    private ExecutorService executorGetRssi = Executors.newFixedThreadPool(2);//thread numbers
 //    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void getCurrentDeviceRssi(BlDevice device) {
-//        BluetoothDevice currentDevice = BA.getRemoteDevice(device.mac);
-//        if (currentDevice == null) return;
+        //start a new scanning
+        Runnable startScan = new Runnable() {
+            private BluetoothAdapter RssiBa = BluetoothAdapter.getDefaultAdapter();
+            @Override
+            public void run() {
+                BluetoothDevice currentDevice = RssiBa.getRemoteDevice(device.mac);
+                if (currentDevice == null) return;
+                // Create a BroadcastReceiver for ACTION_FOUND.
+                final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        String action = intent.getAction();
+                        if (!BluetoothDevice.ACTION_FOUND.equals(action)) return;
+                        BluetoothDevice bt = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                        //use MAC address to identify target
+                        if(!bt.getAddress().equals(device.mac)) return;
+                        short rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI,Short.MIN_VALUE);
+                        device.lstRssi.add(rssi);
+                        RssiBa.cancelDiscovery();//stop scanning after target device found
+                    }
+                };
+                IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+                registerReceiver(mReceiver, filter);
+                RssiBa.startDiscovery();//start scanning
+            }
+            protected void finalize()
+            {
+                if(RssiBa.isDiscovering()) {
+                    RssiBa.cancelDiscovery();//stop scanning
+                }
+            }
+            };
+            executorGetRssi.submit(startScan);
+//        GATT is only for BLE
 //        BluetoothGatt gatt = currentDevice.connectGatt(this, true, new BluetoothGattCallback() {
 //            @Override
 //            public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
@@ -142,21 +175,21 @@ public class MainActivity extends AppCompatActivity {
 //        gatt.readRemoteRssi();
     }
 //    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    public void getRssiExecutor(BlDevice device) {
+    public void runGetRssi(BlDevice device) {
         if (resultview.isScanning) {
             alert();
             return;
         }
         resultview.isScanning = true;
-        resultview.countDown = 3;
+        resultview.countDown = 3;//scanning time(seconds)
         resultview.currentDevice = device;
         textview.setText("");
-        executor.submit(() -> {
+        executorTimer.submit(() -> {
 //            device.getRssi();
+            getCurrentDeviceRssi(device);
             for (int i = resultview.countDown; i >= 0; i--) {
                 resultview.invalidate();
                 try {
-                    getCurrentDeviceRssi(device);
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -164,6 +197,7 @@ public class MainActivity extends AppCompatActivity {
                 resultview.countDown--;
             }
             resultview.isScanning = false;
+            executorGetRssi.shutdownNow();//shutdown all scanning thread
 //            textview.setText(Integer.toString(getCurrentDeviceRssi(device)));
         });
     }
@@ -181,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
             @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                getRssiExecutor(lstBlDevice.get(i));
+                runGetRssi(lstBlDevice.get(i));
             }
         });
         // Create a BroadcastReceiver for ACTION_FOUND.
@@ -198,11 +232,12 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
-        Set<BluetoothDevice> pairedbts = BA.getBondedDevices();
-        for (BluetoothDevice d : pairedbts) {
-            ParcelUuid[] uu = d.getUuids();
-            lstBlDevice.add(new BlDevice(uu[0].toString(), d.getName(), d.getAddress()));
-        }
+        //paired devices
+//        Set<BluetoothDevice> pairedbts = BA.getBondedDevices();
+//        for (BluetoothDevice d : pairedbts) {
+//            ParcelUuid[] uu = d.getUuids();
+//            lstBlDevice.add(new BlDevice("Paired".concat(uu[0].toString()), d.getName(), d.getAddress()));
+//        }
         // Scan
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
