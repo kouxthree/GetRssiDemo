@@ -213,7 +213,12 @@ public class MainActivity extends AppCompatActivity {
             }
             resultview.isScanning = false;
             BA.cancelDiscovery();
-            textview.setText("Got ".concat(Integer.toString(device.lstRssi.size()).concat(" RSSIs")));
+            String strrssi = "[";
+            for(short j: device.lstRssi) {
+                strrssi = strrssi.concat(Short.toString(j)).concat(",");
+            }
+            strrssi = strrssi.concat("]");
+            textview.setText("Got ".concat(Integer.toString(device.lstRssi.size()).concat(" RSSIs: ").concat(strrssi)));
             //shutdown getrssi thread
 //            executorGetRssi.shutdown();
 //            try {
