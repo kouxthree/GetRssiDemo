@@ -30,6 +30,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -136,16 +137,42 @@ public class MainActivity extends AppCompatActivity {
     private ExecutorService executorGetRssi = Executors.newFixedThreadPool(2);//thread pools
 //    Future<BlDevice>  blfuture;
 //    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+//    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void getCurrentDeviceRssi(BlDevice device) {
+        BluetoothAdapter RssiBa = BluetoothAdapter.getDefaultAdapter();
+        final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                if (!BluetoothDevice.ACTION_FOUND.equals(action)) return;
+                BluetoothDevice bt = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                //use MAC address to identify target
+                if (!bt.getAddress().equals(device.mac)) return;
+                short rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE);
+                device.lstRssi.add(rssi);
+                BA.cancelDiscovery();//stop scanning after target device found
+            }
+        };
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        registerReceiver(mReceiver, filter);
+        BA.startDiscovery();
+//        Runnable startRun = () -> {
+//            BA.startDiscovery();//start scanning
+//        };
+//        Runnable stopRun = () -> {
+//            BA.cancelDiscovery();//start scanning
+//        };
+//        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+//        registerReceiver(mReceiver, filter);
+//        BA.startDiscovery();//start scanning
         //for (int i = 0; i < 4; i++) {
-        Future<BlDevice> blfuture = executorGetRssi.submit(new BlRssiCls(device));
-        try {
-            BlDevice deviceWithRssi = blfuture.get();
-            blfuture.cancel(true);
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
+//        Future<BlDevice> blfuture = executorGetRssi.submit(new BlRssiCls(device));
+//        try {
+//            BlDevice deviceWithRssi = blfuture.get();
+//            blfuture.cancel(true);
+//        } catch (InterruptedException | ExecutionException e) {
+//                e.printStackTrace();
+//        }
 //        }
 //        GATT is only for BLE
 //        BluetoothGatt gatt = currentDevice.connectGatt(this, true, new BluetoothGattCallback() {
@@ -163,36 +190,39 @@ public class MainActivity extends AppCompatActivity {
 //        gatt.readRemoteRssi();
     }
 //    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+//    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void runGetRssi(BlDevice device) {
-        if (resultview.isScanning) {
+        if (resultview.isScanning || BA.isDiscovering()) {
             alert(null);
             return;
         }
         resultview.isScanning = true;
-        resultview.countDown = 3;//scanning time(seconds)
+        resultview.countDown = 300;//scanning time(seconds)
         resultview.currentDevice = device;
         textview.setText("");
         executorTimer.submit(() -> {
             for (int i = resultview.countDown; i >= 0; i--) {
                 resultview.invalidate();
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(10);
+                    if(!BA.isDiscovering()) BA.startDiscovery();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 resultview.countDown--;
             }
             resultview.isScanning = false;
+            BA.cancelDiscovery();
+            textview.setText("Got ".concat(Integer.toString(device.lstRssi.size()).concat(" RSSIs")));
             //shutdown getrssi thread
-            executorGetRssi.shutdown();
-            try {
-                if (!executorGetRssi.awaitTermination(800, TimeUnit.MILLISECONDS)) {
-                    executorGetRssi.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                executorGetRssi.shutdownNow();
-            }
+//            executorGetRssi.shutdown();
+//            try {
+//                if (!executorGetRssi.awaitTermination(800, TimeUnit.MILLISECONDS)) {
+//                    executorGetRssi.shutdownNow();
+//                }
+//            } catch (InterruptedException e) {
+//                executorGetRssi.shutdownNow();
+//            }
 //            textview.setText(Integer.toString(getCurrentDeviceRssi(device)));
         });
         getCurrentDeviceRssi(device);
@@ -244,4 +274,5 @@ public class MainActivity extends AppCompatActivity {
 
         Toast.makeText(getApplicationContext(), "Scan Bluetooth Devices", Toast.LENGTH_SHORT).show();
     }
+
 }
